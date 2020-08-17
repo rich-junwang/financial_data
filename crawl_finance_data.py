@@ -1,18 +1,14 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import re
-from selenium import webdriver
 import chromedriver_binary
 import string
 
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+driver = webdriver.Chrome(ChromeDriverManager().install())
+
 pd.options.display.float_format = '{:.0f}'.format
-
-#ticker = input("Input the ticker of the company you'd like to see the financials of: ")
-ticker = "aapl"
-
-is_link = f'https://finance.yahoo.com/quote/{ticker}/financials?p={ticker}'
-bs_link = f'https://finance.yahoo.com/quote/{ticker}/balance-sheet?p={ticker}'
-cf_link = f'https://finance.yahoo.com/quote/{ticker}/cash-flow?p={ticker}'
 
 
 def yahoo_financial_statements(ticker):
@@ -32,17 +28,16 @@ def yahoo_financial_statements(ticker):
     index = 0
 
     df_lists = list()
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
 
     for link in statements_list:
-
 
         driver.get(link)
         html = driver.execute_script('return document.body.innerHTML;')
         soup = BeautifulSoup(html,'lxml')
 
         features = soup.find_all('div', class_='D(tbr)')
-
+        #print("features", features)
         #create headers
         for item in features[0].find_all('div', class_='D(ib)'):
             headers.append(item.text)
@@ -59,10 +54,12 @@ def yahoo_financial_statements(ticker):
             #clear temp_list
             temp_list = []
             index+=1
-
+        #print("final: ", final[1])
+        #print("length of final: ", len(final))
+        #exit(1)
         df = pd.DataFrame(final[1:])
         df.columns = headers
-        df.index = final[1]
+        #df.index = final[1]
 
         #function to make all values numerical
         def convert_to_numeric(column):
@@ -89,10 +86,12 @@ def yahoo_financial_statements(ticker):
     return df_lists
 
 
-financials = yahoo_financial_statements("appl")
+financials = yahoo_financial_statements("aapl")
 
 income_statement = financials[0]
+print("income statement \n ", income_statement)
 balance_sheet = financials[1]
+#print("balance sheet", balance_sheet)
 cash_flow_statement = financials[2]
 
 income_statement.index = income_statement[['Breakdown']]
